@@ -1,0 +1,33 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Excluded pages (Only Dashboard, Login, and Register are pushed per user requirement)
+src/pages/ATSChecker.jsx
+src/pages/ATSResults.jsx
+src/pages/JobSearch.jsx
+src/pages/JobDetails.jsx
+src/pages/Profile.jsx
+src/pages/NotFound.jsx
+src/components/jobs/
