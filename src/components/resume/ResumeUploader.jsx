@@ -25,6 +25,7 @@ import Button from '../common/Button';
 import toast from 'react-hot-toast';
 
 export const ResumeUploader = ({ onAnalysisComplete }) => {
+  debugger
   const fileInputRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
   const { uploadedFile, uploadStatus, uploadProgress, analysisStatus } = useSelector(
     (state) => state.resume
   );
+  console.log("uploadedfile", uploadedFile)
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -54,6 +56,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
   };
 
   const handleFileChange = (e) => {
+
     const file = e.target.files?.[0];
     if (file) {
       processFile(file);
@@ -89,6 +92,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
 
   // Option 1: General ATS Check (Works for guest and authenticated users)
   const handleGeneralCheck = async () => {
+
     if (!uploadedFile) {
       toast.error('Please upload a resume first.');
       return;
@@ -146,11 +150,10 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`group relative border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer ${
-            isDragging
+          className={`group relative border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer ${isDragging
               ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 scale-[1.01]'
               : 'border-slate-300 dark:border-slate-700/80 bg-white/70 dark:bg-[#151F32]/70 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-slate-50/80 dark:hover:bg-[#151F32]'
-          }`}
+            }`}
         >
           {/* Subtle background glow */}
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
@@ -352,11 +355,11 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
                 >
                   Search Jobs
                 </Button>
-                {!isAuthenticated && (
+                {/* {!isAuthenticated && (
                   <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
                     Redirects to login for job search access
                   </p>
-                )}
+                )} */}
               </div>
             </motion.div>
           </div>

@@ -147,23 +147,7 @@ export const Dashboard = () => {
         </div>
       </section>
 
-      {/* PLATFORM METRICS CARDS */}
-      <section className="py-8 -mt-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {PLATFORM_STATS.map((stat, idx) => (
-              <StatsCard key={stat.id} stat={stat} index={idx} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* USER GROWTH ANALYTICS SECTION (Section 4 Requirements) */}
-      <section className="py-14 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <UserGrowthChart />
-        </div>
-      </section>
+      
 
       {/* RESUME ATS CHECKER SECTION (Section 5 Requirements) */}
       <section
@@ -189,6 +173,26 @@ export const Dashboard = () => {
           <ResumeUploader />
         </div>
       </section>
+
+      {/* PLATFORM METRICS CARDS */}
+      <section className="py-8 -mt-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {PLATFORM_STATS.map((stat, idx) => (
+              <StatsCard key={stat.id} stat={stat} index={idx} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* USER GROWTH ANALYTICS SECTION (Section 4 Requirements) */}
+      <section className="py-14 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <UserGrowthChart />
+        </div>
+      </section>
+
+
 
       {/* HOW IT WORKS / ABOUT SECTION */}
       <section id="about" className="py-16 sm:py-24 border-t border-slate-200/80 dark:border-slate-800/80">

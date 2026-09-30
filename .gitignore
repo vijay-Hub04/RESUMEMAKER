@@ -23,11 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 
-# Excluded pages (Only Dashboard, Login, and Register are pushed per user requirement)
-src/pages/ATSChecker.jsx
-src/pages/ATSResults.jsx
-src/pages/JobSearch.jsx
-src/pages/JobDetails.jsx
-src/pages/Profile.jsx
-src/pages/NotFound.jsx
-src/components/jobs/

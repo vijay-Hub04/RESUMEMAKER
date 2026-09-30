@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 
-export const ProtectedRoute = ({ children }) => {
+ export const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const location = useLocation();
 
