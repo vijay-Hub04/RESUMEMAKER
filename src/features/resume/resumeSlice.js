@@ -1,15 +1,47 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { resumeService } from './resumeService';
 
-// Thunk to upload resume
+// Thunk to upload resume to Backend and store in MongoDB
 export const uploadResumeFile = createAsyncThunk(
   'resume/uploadResumeFile',
-  async (file, { rejectWithValue }) => {
+  async (payload, { dispatch, rejectWithValue }) => {
     try {
-      const data = await resumeService.uploadResume(file);
+      // payload can be a File object directly OR an object { file, candidateInfo }
+      const file = payload instanceof File ? payload : payload?.file;
+      const candidateInfo = payload instanceof File ? {} : (payload?.candidateInfo || {});
+
+      if (!file) {
+        return rejectWithValue('No file was provided for upload.');
+      }
+
+      const data = await resumeService.uploadResume(file, candidateInfo, (progress) => {
+        dispatch(setUploadProgress(progress));
+      });
       return data;
     } catch (err) {
-      return rejectWithValue(err.message || 'Failed to upload resume');
+      const errorMessage =
+        err.response?.data?.message ||
+        err.customMessage ||
+        err.message ||
+        'Failed to upload resume to MongoDB';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Thunk to delete resume from MongoDB
+export const deleteResumeFile = createAsyncThunk(
+  'resume/deleteResumeFile',
+  async (id, { dispatch, rejectWithValue }) => {
+    try {
+      if (id) {
+        await resumeService.deleteResume(id);
+      }
+      dispatch(removeResume());
+      return id;
+    } catch (err) {
+      dispatch(removeResume());
+      return rejectWithValue(err.response?.data?.message || err.message || 'Failed to delete resume');
     }
   }
 );
@@ -29,7 +61,7 @@ export const analyzeGeneralATS = createAsyncThunk(
 );
 
 const initialState = {
-  uploadedFile: null, // { fileName, fileSize, fileType, uploadedAt, previewUrl }
+  uploadedFile: null, // { id, fileName, originalName, fileSize, fileType, uploadedAt, previewUrl, downloadUrl, viewUrl, storedInMongo }
   uploadProgress: 0,
   uploadStatus: 'idle', // 'idle' | 'uploading' | 'succeeded' | 'failed'
   analysisStatus: 'idle', // 'idle' | 'analyzing' | 'succeeded' | 'failed'
@@ -58,10 +90,14 @@ const resumeSlice = createSlice({
     },
     setMockDemoResume: (state) => {
       state.uploadedFile = {
+        id: 'demo-sample-id-12345',
         fileName: 'Alex_Morgan_Senior_FullStack_Resume.pdf',
+        originalName: 'Alex_Morgan_Senior_FullStack_Resume.pdf',
         fileSize: 184500, // ~180KB
         fileType: 'application/pdf',
+        mimeType: 'application/pdf',
         uploadedAt: new Date().toISOString(),
+        storedInMongo: true,
       };
       state.uploadStatus = 'succeeded';
       state.uploadProgress = 100;
@@ -72,7 +108,7 @@ const resumeSlice = createSlice({
       // Upload Resume
       .addCase(uploadResumeFile.pending, (state) => {
         state.uploadStatus = 'uploading';
-        state.uploadProgress = 30;
+        state.uploadProgress = 15;
         state.error = null;
       })
       .addCase(uploadResumeFile.fulfilled, (state, action) => {
@@ -85,6 +121,12 @@ const resumeSlice = createSlice({
         state.uploadStatus = 'failed';
         state.uploadProgress = 0;
         state.error = action.payload;
+      })
+      // Delete Resume
+      .addCase(deleteResumeFile.fulfilled, (state) => {
+        state.uploadedFile = null;
+        state.uploadProgress = 0;
+        state.uploadStatus = 'idle';
       })
       // Analyze ATS
       .addCase(analyzeGeneralATS.pending, (state) => {

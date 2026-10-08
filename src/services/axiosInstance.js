@@ -1,22 +1,25 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || 'https://api.careerai.local/api/v1';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  timeout: 30000,
 });
 
-// Request interceptor: Attach JWT token if available
+// Request interceptor: Attach JWT token if available & properly format headers
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('careerai_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // If uploading FormData, delete Content-Type so browser sets boundary multipart header correctly
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     return config;
   },
   (error) => {

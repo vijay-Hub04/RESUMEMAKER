@@ -6,7 +6,12 @@ export const API_ENDPOINTS = {
     ME: '/auth/me',
   },
   RESUME: {
-    UPLOAD: '/resume/upload',
+    UPLOAD: '/uploadResume',
+    GET_ALL: '/uploadResume',
+    GET_BY_ID: (id) => `/uploadResume/${id}`,
+    DOWNLOAD: (id) => `/uploadResume/${id}/download`,
+    VIEW: (id) => `/uploadResume/${id}/view`,
+    DELETE: (id) => `/uploadResume/${id}`,
     ANALYZE_GENERAL: '/resume/analyze-general',
     ANALYZE_JOB_MATCH: '/resume/analyze-job-match',
     GET_HISTORY: '/resume/history',

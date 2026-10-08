@@ -8,14 +8,16 @@ import {
   Trash2,
   CheckCircle2,
   Search,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
-  AlertCircle,
   FileCheck,
+  Database,
+  ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import {
   uploadResumeFile,
+  deleteResumeFile,
   removeResume,
   analyzeGeneralATS,
   setMockDemoResume,
@@ -25,7 +27,6 @@ import Button from '../common/Button';
 import toast from 'react-hot-toast';
 
 export const ResumeUploader = ({ onAnalysisComplete }) => {
-  debugger
   const fileInputRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -33,12 +34,11 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
   const { uploadedFile, uploadStatus, uploadProgress, analysisStatus } = useSelector(
     (state) => state.resume
   );
-  console.log("uploadedfile", uploadedFile)
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   const [isDragging, setIsDragging] = useState(false);
 
-  // Handle file selection
+  // Handle file selection and trigger store upload action
   const processFile = async (file) => {
     const validation = validateResumeFile(file);
     if (!validation.valid) {
@@ -47,16 +47,31 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
     }
 
     try {
-      toast.loading('Uploading and scanning resume...', { id: 'resume-upload' });
-      await dispatch(uploadResumeFile(file)).unwrap();
-      toast.success('Resume uploaded successfully!', { id: 'resume-upload' });
+      const candidateInfo = user
+        ? {
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
+          }
+        : {};
+
+      toast.loading('Uploading resume and saving to MongoDB...', { id: 'resume-upload' });
+
+      // Dispatch Redux store action that calls the backend upload API
+      await dispatch(
+        uploadResumeFile({
+          file,
+          candidateInfo,
+        })
+      ).unwrap();
+
+      toast.success('Resume successfully stored in MongoDB!', { id: 'resume-upload' });
     } catch (err) {
-      toast.error(err || 'Failed to upload resume', { id: 'resume-upload' });
+      toast.error(err || 'Failed to upload resume to MongoDB', { id: 'resume-upload' });
     }
   };
 
   const handleFileChange = (e) => {
-
     const file = e.target.files?.[0];
     if (file) {
       processFile(file);
@@ -82,17 +97,26 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
     }
   };
 
-  const handleRemove = () => {
-    dispatch(removeResume());
+  const handleRemove = async () => {
+    if (uploadedFile?.id && !uploadedFile?.id.startsWith('demo-')) {
+      try {
+        await dispatch(deleteResumeFile(uploadedFile.id)).unwrap();
+        toast.success('Resume deleted from MongoDB');
+      } catch {
+        dispatch(removeResume());
+        toast.success('Resume removed');
+      }
+    } else {
+      dispatch(removeResume());
+      toast.success('Resume removed');
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    toast.success('Resume removed');
   };
 
   // Option 1: General ATS Check (Works for guest and authenticated users)
   const handleGeneralCheck = async () => {
-
     if (!uploadedFile) {
       toast.error('Please upload a resume first.');
       return;
@@ -143,17 +167,46 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
         className="hidden"
       />
 
-      {/* Upload Box if no file */}
-      {!uploadedFile ? (
+      {/* Uploading Progress State */}
+      {uploadStatus === 'uploading' ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="border-2 border-indigo-500/40 bg-indigo-50/60 dark:bg-indigo-950/30 rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4">
+            <Loader2 className="w-8 h-8 animate-spin" />
+          </div>
+          <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white mb-2">
+            Uploading & Storing Resume in MongoDB...
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6">
+            Saving file binary and metadata directly into your MongoDB database collection.
+          </p>
+          <div className="w-full max-w-md bg-slate-200 dark:bg-slate-800 rounded-full h-3 overflow-hidden shadow-inner">
+            <motion.div
+              className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-full rounded-full"
+              initial={{ width: '15%' }}
+              animate={{ width: `${Math.max(uploadProgress, 25)}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-2">
+            {uploadProgress}% Completed
+          </span>
+        </motion.div>
+      ) : !uploadedFile ? (
+        /* Upload Box if no file */
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`group relative border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer ${isDragging
+          className={`group relative border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer ${
+            isDragging
               ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 scale-[1.01]'
               : 'border-slate-300 dark:border-slate-700/80 bg-white/70 dark:bg-[#151F32]/70 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-slate-50/80 dark:hover:bg-[#151F32]'
-            }`}
+          }`}
         >
           {/* Subtle background glow */}
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
@@ -172,7 +225,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
               Drag & Drop your resume here
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md">
-              Supports <strong className="text-slate-700 dark:text-slate-200">PDF, DOC, DOCX</strong> up to 10MB. We parse standard layouts, headings, and keywords instantly.
+              Supports <strong className="text-slate-700 dark:text-slate-200">PDF, DOC, DOCX</strong> up to 10MB. Stored securely in MongoDB.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -202,13 +255,16 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
 
             <div className="mt-8 flex items-center gap-6 text-xs text-slate-400 dark:text-slate-500">
               <span className="flex items-center gap-1.5">
+                <Database className="w-4 h-4 text-emerald-500" />
+                MongoDB Storage
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-500" />
                 100% Confidential
               </span>
               <span>•</span>
               <span>Instant Parsing</span>
-              <span>•</span>
-              <span>No Login Required for Base ATS</span>
             </div>
           </div>
         </div>
@@ -226,21 +282,39 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h4 className="text-base font-bold text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
-                    {uploadedFile.fileName}
+                    {uploadedFile.fileName || uploadedFile.originalName}
                   </h4>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-medium">
-                    Ready
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-semibold flex items-center gap-1">
+                    <Database className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    Stored in MongoDB
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Size: {formatFileSize(uploadedFile.fileSize)} • Type: {uploadedFile.fileType.split('/')[1]?.toUpperCase() || 'DOCUMENT'}
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Size: {formatFileSize(uploadedFile.fileSize || 0)} • Type:{' '}
+                  {((uploadedFile.fileType || uploadedFile.mimeType || 'application/pdf').split('/')[1] || 'PDF').toUpperCase()}
+                  {uploadedFile.id && (
+                    <span className="ml-2 font-mono text-[11px] text-slate-400 dark:text-slate-500">
+                      (ID: {uploadedFile.id.slice(-6)})
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-center">
+            <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+              {(uploadedFile.downloadUrl || uploadedFile.previewUrl) && (
+                <a
+                  href={uploadedFile.downloadUrl || uploadedFile.previewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-semibold px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  View Binary
+                </a>
+              )}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -259,7 +333,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
             </div>
           </div>
 
-          {/* TWO ATS CHECKING OPTIONS (Section 5 Requirements) */}
+          {/* TWO ATS CHECKING OPTIONS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             {/* Option 1: General ATS Check */}
             <motion.div
@@ -355,11 +429,6 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
                 >
                   Search Jobs
                 </Button>
-                {/* {!isAuthenticated && (
-                  <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 mt-2">
-                    Redirects to login for job search access
-                  </p>
-                )} */}
               </div>
             </motion.div>
           </div>
