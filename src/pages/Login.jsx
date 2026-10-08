@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading, error, resetError } = useAuth();
+  const { login, register, isLoading, error, resetError } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -42,6 +42,7 @@ export const Login = () => {
   };
 
   const handleSubmit = async (e) => {
+    
     e.preventDefault();
     resetError();
     if (!validate()) return;
@@ -49,7 +50,8 @@ export const Login = () => {
     try {
       await login({ email: formData.email, password: formData.password }).unwrap();
       toast.success('Welcome back! Signed in successfully.');
-      navigate(from, { replace: true });
+      // navigate(from, { replace: true });
+      navigate("/ats-checker")
     } catch (err) {
       toast.error(err || 'Failed to sign in. Please verify your credentials.');
     }
@@ -62,11 +64,20 @@ export const Login = () => {
     };
     setFormData((prev) => ({ ...prev, ...demoCredentials }));
     try {
-      await login(demoCredentials).unwrap();
+      try {
+        await login(demoCredentials).unwrap();
+      } catch {
+        // If demo candidate doesn't exist yet in MongoDB, create it automatically
+        await register({
+          name: 'Alex Morgan',
+          email: demoCredentials.email,
+          password: demoCredentials.password,
+        }).unwrap();
+      }
       toast.success('Logged in with Demo Candidate profile!');
       navigate(from, { replace: true });
     } catch (err) {
-      toast.error('Demo login failed');
+      toast.error(typeof err === 'string' ? err : 'Demo login failed');
     }
   };
 

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 
- export const ProtectedRoute = ({ children }) => {
+export const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const location = useLocation();
 
@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  return children;
+  return children ? children : <Outlet />;
 };
 
 export default ProtectedRoute;
