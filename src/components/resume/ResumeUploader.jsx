@@ -49,6 +49,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
     try {
       const candidateInfo = user
         ? {
+            userId: user.id || user._id,
             name: user.name || '',
             email: user.email || '',
             phone: user.phone || '',
@@ -65,9 +66,9 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
         })
       ).unwrap();
 
-      toast.success('Resume successfully stored in MongoDB!', { id: 'resume-upload' });
+      toast.success('Resume uploaded successfully!', { id: 'resume-upload' });
     } catch (err) {
-      toast.error(err || 'Failed to upload resume to MongoDB', { id: 'resume-upload' });
+      toast.error(err || 'Failed to upload resume', { id: 'resume-upload' });
     }
   };
 

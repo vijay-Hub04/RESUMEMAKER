@@ -23,6 +23,9 @@ export const resumeService = {
     if (candidateInfo?.phone) {
       formData.append('candidatePhone', candidateInfo.phone);
     }
+    if (candidateInfo?.userId) {
+      formData.append('userId', candidateInfo.userId);
+    }
 
     const response = await axiosInstance.post(API_ENDPOINTS.RESUME.UPLOAD, formData, {
       onUploadProgress: (progressEvent) => {
@@ -60,6 +63,45 @@ export const resumeService = {
       storedInMongo: true,
       rawMongoData: resData,
     };
+  },
+
+  /**
+   * Fetch active resume of logged in user from MongoDB
+   */
+  getMyResume: async () => {
+    try {
+      const response = await axiosInstance.get(API_ENDPOINTS.RESUME.GET_MY_RESUME);
+      const resData = response.data?.data;
+      if (!resData) return null;
+
+      const fileId = resData.id || resData._id;
+      const baseURL = axiosInstance.defaults.baseURL || 'http://localhost:5000';
+
+      const downloadUrl = resData.downloadUrl
+        ? (resData.downloadUrl.startsWith('http') ? resData.downloadUrl : `${baseURL}${resData.downloadUrl}`)
+        : `${baseURL}/uploadResume/${fileId}/download`;
+
+      const viewUrl = resData.viewUrl
+        ? (resData.viewUrl.startsWith('http') ? resData.viewUrl : `${baseURL}${resData.viewUrl}`)
+        : `${baseURL}/uploadResume/${fileId}/view`;
+
+      return {
+        ...resData,
+        id: fileId,
+        _id: fileId,
+        fileName: resData.fileName || resData.originalName,
+        originalName: resData.originalName || resData.fileName,
+        fileSize: resData.fileSize,
+        fileType: resData.mimeType || resData.fileType || 'application/pdf',
+        mimeType: resData.mimeType || resData.fileType || 'application/pdf',
+        downloadUrl,
+        viewUrl,
+        storedInMongo: true,
+      };
+    } catch (err) {
+      console.warn('Could not fetch active user resume:', err);
+      return null;
+    }
   },
 
   /**

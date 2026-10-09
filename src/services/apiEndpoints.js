@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   },
   RESUME: {
     UPLOAD: '/uploadResume',
+    GET_MY_RESUME: '/uploadResume/my-resume',
     GET_ALL: '/uploadResume',
     GET_BY_ID: (id) => `/uploadResume/${id}`,
     DOWNLOAD: (id) => `/uploadResume/${id}/download`,

@@ -1,5 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { resumeService } from './resumeService';
+import { loginUser, logoutUser } from '../auth/authSlice';
+
+// Thunk to fetch active user resume from MongoDB
+export const fetchMyResume = createAsyncThunk(
+  'resume/fetchMyResume',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await resumeService.getMyResume();
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Failed to fetch resume');
+    }
+  }
+);
 
 // Thunk to upload resume to Backend and store in MongoDB
 export const uploadResumeFile = createAsyncThunk(
@@ -76,6 +90,11 @@ const resumeSlice = createSlice({
     setUploadProgress: (state, action) => {
       state.uploadProgress = action.payload;
     },
+    setUploadedFile: (state, action) => {
+      state.uploadedFile = action.payload;
+      state.uploadStatus = action.payload ? 'succeeded' : 'idle';
+      state.uploadProgress = action.payload ? 100 : 0;
+    },
     removeResume: (state) => {
       state.uploadedFile = null;
       state.uploadProgress = 0;
@@ -105,6 +124,29 @@ const resumeSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Fetch My Resume
+      .addCase(fetchMyResume.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.uploadedFile = action.payload;
+          state.uploadStatus = 'succeeded';
+          state.uploadProgress = 100;
+        }
+      })
+      // When User Logs In, automatically hydrate existing resume from MongoDB
+      .addCase(loginUser.fulfilled, (state, action) => {
+        if (action.payload?.resume) {
+          state.uploadedFile = action.payload.resume;
+          state.uploadStatus = 'succeeded';
+          state.uploadProgress = 100;
+        }
+      })
+      // When User Logs Out, clear resume state
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.uploadedFile = null;
+        state.uploadStatus = 'idle';
+        state.uploadProgress = 0;
+        state.atsResults = null;
+      })
       // Upload Resume
       .addCase(uploadResumeFile.pending, (state) => {
         state.uploadStatus = 'uploading';
@@ -145,5 +187,12 @@ const resumeSlice = createSlice({
   },
 });
 
-export const { setUploadProgress, removeResume, resetAnalysis, setMockDemoResume } = resumeSlice.actions;
+export const {
+  setUploadProgress,
+  setUploadedFile,
+  removeResume,
+  resetAnalysis,
+  setMockDemoResume,
+} = resumeSlice.actions;
+
 export default resumeSlice.reducer;
