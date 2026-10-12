@@ -289,7 +289,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
                   </h4>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-semibold flex items-center gap-1">
                     <Database className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                    Stored in ATS
+                    
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

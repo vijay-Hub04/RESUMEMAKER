@@ -118,7 +118,7 @@ export const Dashboard = () => {
                   {uploadedFile ? (
                     <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
                       <CheckCircle className="w-3.5 h-3.5" />
-                      Saved in MongoDB
+                      
                     </span>
                   ) : (
                     <span className="text-amber-600 dark:text-amber-400 font-medium">
