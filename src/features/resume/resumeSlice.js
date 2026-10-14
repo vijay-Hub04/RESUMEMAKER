@@ -69,7 +69,12 @@ export const analyzeGeneralATS = createAsyncThunk(
       const data = await resumeService.analyzeGeneralResume(resume.uploadedFile);
       return data;
     } catch (err) {
-      return rejectWithValue(err.message || 'ATS analysis failed');
+      const errorMessage =
+        err.response?.data?.message ||
+        err.customMessage ||
+        err.message ||
+        'ATS analysis failed';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -130,6 +135,9 @@ const resumeSlice = createSlice({
           state.uploadedFile = action.payload;
           state.uploadStatus = 'succeeded';
           state.uploadProgress = 100;
+          if (action.payload.atsResult) {
+            state.atsResults = action.payload.atsResult;
+          }
         }
       })
       // When User Logs In, automatically hydrate existing resume from MongoDB
@@ -138,6 +146,9 @@ const resumeSlice = createSlice({
           state.uploadedFile = action.payload.resume;
           state.uploadStatus = 'succeeded';
           state.uploadProgress = 100;
+          if (action.payload.resume.atsResult) {
+            state.atsResults = action.payload.resume.atsResult;
+          }
         }
       })
       // When User Logs Out, clear resume state
@@ -157,6 +168,9 @@ const resumeSlice = createSlice({
         state.uploadStatus = 'succeeded';
         state.uploadProgress = 100;
         state.uploadedFile = action.payload;
+        // Reset previously calculated results if a new resume was uploaded
+        state.atsResults = null;
+        state.analysisStatus = 'idle';
         state.error = null;
       })
       .addCase(uploadResumeFile.rejected, (state, action) => {
@@ -169,6 +183,7 @@ const resumeSlice = createSlice({
         state.uploadedFile = null;
         state.uploadProgress = 0;
         state.uploadStatus = 'idle';
+        state.atsResults = null;
       })
       // Analyze ATS
       .addCase(analyzeGeneralATS.pending, (state) => {
@@ -178,6 +193,10 @@ const resumeSlice = createSlice({
       .addCase(analyzeGeneralATS.fulfilled, (state, action) => {
         state.analysisStatus = 'succeeded';
         state.atsResults = action.payload;
+        if (state.uploadedFile && action.payload) {
+          state.uploadedFile.atsScore = action.payload.score;
+          state.uploadedFile.atsResult = action.payload;
+        }
         state.error = null;
       })
       .addCase(analyzeGeneralATS.rejected, (state, action) => {

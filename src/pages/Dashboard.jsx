@@ -116,10 +116,17 @@ export const Dashboard = () => {
 
                 <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                   {uploadedFile ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Stored in MongoDB
+                      </span>
+                      {uploadedFile.atsScore ? (
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300">
+                          ATS Score: {uploadedFile.atsScore}%
+                        </span>
+                      ) : null}
+                    </div>
                   ) : (
                     <span className="text-amber-600 dark:text-amber-400 font-medium">
                       Upload below to enable live job matching

@@ -32,6 +32,40 @@ export const ATSResults = () => {
   const { uploadedFile, atsResults, analysisStatus } = useSelector((state) => state.resume);
   const { isAuthenticated } = useSelector((state) => state.auth);
 
+  // If user has uploaded a real resume from MongoDB but it has not been analyzed yet, analyze it
+  useEffect(() => {
+    if (
+      !atsResults &&
+      uploadedFile &&
+      uploadedFile.id &&
+      !uploadedFile.id.toString().startsWith('demo-') &&
+      analysisStatus === 'idle'
+    ) {
+      dispatch(analyzeGeneralATS());
+    }
+  }, [atsResults, uploadedFile, analysisStatus, dispatch]);
+
+  // Loading state while ATS algorithm executes on backend buffer
+  if (analysisStatus === 'analyzing') {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="relative w-28 h-28 mb-8 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-4 border-indigo-200 dark:border-indigo-900 animate-ping opacity-30" />
+          <div className="w-24 h-24 rounded-full border-4 border-indigo-600 border-t-transparent dark:border-indigo-400 dark:border-t-transparent animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-pulse" />
+          </div>
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white mb-2">
+          Evaluating Resume with Real ATS Engine...
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+          Extracting text from MongoDB binary buffer, cross-referencing 100+ technical skill taxonomies, and measuring section hierarchies.
+        </p>
+      </div>
+    );
+  }
+
   // Fallback to default mock result if user navigates directly to /ats-results
   const results = atsResults || {
     ...DEFAULT_MOCK_ATS_RESULT,
@@ -40,6 +74,7 @@ export const ATSResults = () => {
     isSimulated: true,
   };
 
+  const isLiveAnalysis = results.isSimulated === false || !results.isSimulated;
   const score = results.score || 78;
   const scoreConfig = getScoreColor(score);
 
@@ -69,18 +104,33 @@ export const ATSResults = () => {
   return (
     <div className="py-10 sm:py-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Notice of simulated analysis per prompt instructions */}
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-            <p className="text-xs sm:text-sm text-amber-900 dark:text-amber-200">
-              <strong className="font-semibold">Simulated ATS Analysis (Frontend Demo Mode):</strong> Results below illustrate comprehensive ATS parsing algorithms and actionable suggestions.
-            </p>
+        {/* Dynamic status banner: Real Engine vs Demo Mode */}
+        {isLiveAnalysis ? (
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <p className="text-xs sm:text-sm text-emerald-900 dark:text-emerald-200">
+                <strong className="font-semibold">Live ATS Evaluation Active:</strong> Parsed directly from MongoDB BSON binary buffer using 4-pillar keyword and structure scoring.
+              </p>
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Real MongoDB Engine
+            </span>
           </div>
-          <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300">
-            Demo Mode Active
-          </span>
-        </div>
+        ) : (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <p className="text-xs sm:text-sm text-amber-900 dark:text-amber-200">
+                <strong className="font-semibold">Simulated ATS Analysis (Frontend Demo Mode):</strong> Results below illustrate comprehensive ATS parsing algorithms and actionable suggestions.
+              </p>
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300">
+              Demo Mode Active
+            </span>
+          </div>
+        )}
 
         {/* Top Header & Quick Actions */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -202,14 +252,14 @@ export const ATSResults = () => {
                   <span className="text-xs text-slate-400 block font-medium">Layout Health</span>
                   <span className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 mt-0.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    88% Optimal
+                    {results.formatting?.score || 88}% Optimal
                   </span>
                 </div>
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800">
                   <span className="text-xs text-slate-400 block font-medium">Keyword Density</span>
                   <span className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 mt-0.5">
                     <TrendingUp className="w-4 h-4 text-indigo-500" />
-                    74% Matched
+                    {results.skillsAnalysis?.matchedPercentage || 74}% Matched
                   </span>
                 </div>
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 col-span-2 sm:col-span-1">
