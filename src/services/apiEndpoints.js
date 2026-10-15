@@ -22,7 +22,9 @@ export const API_ENDPOINTS = {
   JOBS: {
     GET_ALL: '/jobs',
     GET_BY_ID: (id) => `/jobs/${id}`,
-    SEARCH: '/jobs/search',
+    MATCH: (id) => `/jobs/${id}/match`,
+    APPLY: (id) => `/jobs/${id}/apply`,
+    GET_APPLIED: '/jobs/applied/me',
   },
   ANALYTICS: {
     USER_GROWTH: '/analytics/user-growth',

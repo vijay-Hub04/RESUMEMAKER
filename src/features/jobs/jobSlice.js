@@ -3,9 +3,11 @@ import { jobService } from './jobService';
 
 export const fetchJobs = createAsyncThunk(
   'jobs/fetchJobs',
-  async (filters, { rejectWithValue }) => {
+  async (filters, { getState, rejectWithValue }) => {
     try {
-      const data = await jobService.getJobs(filters);
+      const { resume } = getState();
+      const resumeId = resume.uploadedFile?.id || resume.uploadedFile?._id;
+      const data = await jobService.getJobs(filters, resumeId);
       return data;
     } catch (err) {
       return rejectWithValue(err.message || 'Failed to fetch jobs');
@@ -15,9 +17,11 @@ export const fetchJobs = createAsyncThunk(
 
 export const fetchJobById = createAsyncThunk(
   'jobs/fetchJobById',
-  async (id, { rejectWithValue }) => {
+  async (id, { getState, rejectWithValue }) => {
     try {
-      const data = await jobService.getJobById(id);
+      const { resume } = getState();
+      const resumeId = resume.uploadedFile?.id || resume.uploadedFile?._id;
+      const data = await jobService.getJobById(id, resumeId);
       return data;
     } catch (err) {
       return rejectWithValue(err.message || 'Job not found');
@@ -30,10 +34,25 @@ export const checkJobMatchATS = createAsyncThunk(
   async (job, { getState, rejectWithValue }) => {
     try {
       const { resume } = getState();
-      const data = await jobService.analyzeJobATS(resume.uploadedFile, job);
+      const jobId = job.id || job._id;
+      const resumeId = resume.uploadedFile?.id || resume.uploadedFile?._id;
+      const data = await jobService.analyzeJobATS(jobId, resumeId);
       return data;
     } catch (err) {
       return rejectWithValue(err.message || 'Job match analysis failed');
+    }
+  }
+);
+
+export const applyToJobAsync = createAsyncThunk(
+  'jobs/applyToJobAsync',
+  async ({ jobId, notes = '' }, { rejectWithValue }) => {
+    try {
+      const data = await jobService.applyToJob(jobId, notes);
+      return { jobId, ...data };
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to submit application';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -51,6 +70,7 @@ const initialState = {
   jobAtsResult: null,
   isLoading: false,
   isMatching: false,
+  isApplying: false,
   error: null,
 };
 
@@ -116,6 +136,25 @@ const jobSlice = createSlice({
       })
       .addCase(checkJobMatchATS.rejected, (state, action) => {
         state.isMatching = false;
+        state.error = action.payload;
+      })
+      // Apply To Job
+      .addCase(applyToJobAsync.pending, (state) => {
+        state.isApplying = true;
+        state.error = null;
+      })
+      .addCase(applyToJobAsync.fulfilled, (state, action) => {
+        state.isApplying = false;
+        const jobId = action.payload.jobId;
+        state.jobs = state.jobs.map((j) =>
+          j.id === jobId ? { ...j, hasApplied: true } : j
+        );
+        if (state.selectedJob && state.selectedJob.id === jobId) {
+          state.selectedJob.hasApplied = true;
+        }
+      })
+      .addCase(applyToJobAsync.rejected, (state, action) => {
+        state.isApplying = false;
         state.error = action.payload;
       });
   },

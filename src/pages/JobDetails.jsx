@@ -15,8 +15,9 @@ import {
   Share2,
   Bookmark,
   Users,
+  ExternalLink,
 } from 'lucide-react';
-import { fetchJobById } from '../features/jobs/jobSlice';
+import { fetchJobById, applyToJobAsync } from '../features/jobs/jobSlice';
 import Button from '../components/common/Button';
 import Loader from '../components/common/Loader';
 import JobAtsMatchModal from '../components/jobs/JobAtsMatchModal';
@@ -27,8 +28,9 @@ export const JobDetails = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { selectedJob, isLoading } = useSelector((state) => state.jobs);
+  const { selectedJob, isLoading, isApplying } = useSelector((state) => state.jobs);
   const { uploadedFile } = useSelector((state) => state.resume);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -43,8 +45,24 @@ export const JobDetails = () => {
     return <Loader text="Loading job posting details..." fullScreen={false} />;
   }
 
-  const handleApply = () => {
-    toast.success(`Application submitted to ${selectedJob.company}! Check your email for confirmation.`);
+  const handleApply = async () => {
+    if (!isAuthenticated) {
+      toast('Please sign in or create an account to submit your application.', { icon: '🔒' });
+      navigate('/login', { state: { from: `/jobs/${id}` } });
+      return;
+    }
+
+    try {
+      await dispatch(applyToJobAsync({ jobId: selectedJob.id })).unwrap();
+      toast.success(`Application recorded for ${selectedJob.title} at ${selectedJob.company}!`);
+      
+      const destinationUrl = selectedJob.applyUrl || selectedJob.linkedinSearchUrl || selectedJob.naukriSearchUrl;
+      if (destinationUrl) {
+        window.open(destinationUrl, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err) {
+      toast.error(err || 'Failed to submit application');
+    }
   };
 
   const handleShare = () => {
@@ -76,7 +94,7 @@ export const JobDetails = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative">
             <div className="flex items-start gap-4 sm:gap-6">
               <img
-                src={selectedJob.companyLogo}
+                src={selectedJob.logo || selectedJob.companyLogo}
                 alt={selectedJob.company}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-md shrink-0"
               />
@@ -85,6 +103,18 @@ export const JobDetails = () => {
                   <h1 className="text-xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
                     {selectedJob.title}
                   </h1>
+                  {selectedJob.matchScore ? (
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {selectedJob.matchScore}% Match ({selectedJob.matchLevel})
+                    </span>
+                  ) : null}
+                  {selectedJob.hasApplied ? (
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Applied
+                    </span>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
                   <Building2 className="w-4 h-4" />
@@ -143,9 +173,15 @@ export const JobDetails = () => {
               >
                 Check ATS Match
               </Button>
-              <Button variant="primary" size="md" onClick={handleApply}>
-                Apply Now
-              </Button>
+              {selectedJob.hasApplied ? (
+                <Button variant="secondary" size="md" disabled className="opacity-90 font-bold text-emerald-600">
+                  Applied ✓
+                </Button>
+              ) : (
+                <Button variant="primary" size="md" isLoading={isApplying} onClick={handleApply}>
+                  Apply Now
+                </Button>
+              )}
             </div>
           </div>
         </div>

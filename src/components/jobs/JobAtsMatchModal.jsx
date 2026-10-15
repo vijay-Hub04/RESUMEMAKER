@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -9,22 +10,24 @@ import {
   Briefcase,
   Building2,
   MapPin,
-  Upload,
   ArrowRight,
   TrendingUp,
+  ExternalLink,
 } from 'lucide-react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
-import { checkJobMatchATS, clearJobAtsResult } from '../../features/jobs/jobSlice';
-import { uploadResumeFile, setMockDemoResume } from '../../features/resume/resumeSlice';
+import { checkJobMatchATS, clearJobAtsResult, applyToJobAsync } from '../../features/jobs/jobSlice';
+import { setMockDemoResume } from '../../features/resume/resumeSlice';
 import { getScoreColor } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 
 export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const { uploadedFile } = useSelector((state) => state.resume);
-  const { jobAtsResult, isMatching } = useSelector((state) => state.jobs);
-  const [activeTab, setActiveTab] = useState('match');
+  const { jobAtsResult, isMatching, isApplying } = useSelector((state) => state.jobs);
 
   const handleRunMatch = async () => {
     if (!uploadedFile) {
@@ -47,8 +50,45 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
     }, 200);
   };
 
-  const score = jobAtsResult?.overallScore || 82;
+  const handleApplyClick = async () => {
+    if (!isAuthenticated) {
+      toast('Please sign in to submit your job application.', { icon: '🔒' });
+      onClose();
+      navigate('/login', { state: { from: `/jobs/${job?.id}` } });
+      return;
+    }
+
+    try {
+      await dispatch(applyToJobAsync({ jobId: job.id })).unwrap();
+      toast.success(`Application recorded for ${job.title} at ${job.company}!`);
+      
+      const destinationUrl = job.applyUrl || job.linkedinSearchUrl || job.naukriSearchUrl;
+      if (destinationUrl) {
+        window.open(destinationUrl, '_blank', 'noopener,noreferrer');
+      }
+      onClose();
+    } catch (err) {
+      toast.error(err || 'Application could not be submitted');
+    }
+  };
+
+  // Normalize match metrics across mock and live backend endpoints
+  const score = jobAtsResult?.matchScore ?? jobAtsResult?.overallScore ?? job?.matchScore ?? 82;
   const scoreConfig = getScoreColor(score);
+  const compatibilityStatus =
+    jobAtsResult?.matchLevel || jobAtsResult?.compatibilityStatus || job?.matchLevel || 'Good Match';
+  const matchedKeywords =
+    jobAtsResult?.matchingSkills || jobAtsResult?.matchedKeywords || job?.matchingSkills || [];
+  const missingKeywords =
+    jobAtsResult?.missingSkills || jobAtsResult?.missingKeywords || job?.missingSkills || [];
+  const recommendations =
+    jobAtsResult?.actionRecommendations ||
+    (jobAtsResult?.matchSummary
+      ? [jobAtsResult.matchSummary, `Tailor your bullet points specifically for ${job?.company || 'this role'}.`]
+      : [
+          `Incorporate keywords: ${missingKeywords.slice(0, 3).join(', ')} into your resume experience section.`,
+          `Highlight quantifiable metrics relating to ${job?.title || 'this position'}.`,
+        ]);
 
   return (
     <Modal
@@ -66,7 +106,7 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
           {/* Target Job Header Summary */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-start gap-4">
             <img
-              src={job.companyLogo}
+              src={job.logo || job.companyLogo}
               alt={job.company}
               className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
             />
@@ -98,31 +138,31 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
                 No Resume Active in Session
               </h5>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                You haven't uploaded a resume yet. Load our sample resume or browse from your device to check ATS fit for this role.
+                Upload your resume or load our sample resume to benchmark your compatibility.
               </p>
-              <div className="mt-4 flex items-center justify-center gap-3">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={handleUseDemoResume}
-                  leftIcon={Sparkles}
-                >
-                  Load Sample Candidate Resume
+              <div className="flex items-center justify-center gap-3 mt-4">
+                <Button variant="secondary" size="sm" onClick={handleUseDemoResume}>
+                  Use Sample Resume
+                </Button>
+                <Button variant="primary" size="sm" onClick={() => navigate('/ats-checker')}>
+                  Upload Resume
                 </Button>
               </div>
             </div>
-          ) : !jobAtsResult ? (
-            <div className="p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900 text-center space-y-4">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                <FileText className="w-4 h-4" />
-                <span>Selected: {uploadedFile.fileName}</span>
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
-                Ready to run deep semantic comparison between your resume and {job.title} at {job.company}.
+          ) : !jobAtsResult && !job?.matchScore ? (
+            /* Pre-Match Trigger View */
+            <div className="p-6 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 text-center">
+              <Sparkles className="w-8 h-8 text-indigo-600 dark:text-indigo-400 mx-auto mb-2" />
+              <h5 className="text-sm font-bold text-slate-900 dark:text-white">
+                Ready to benchmark against "{job.title}"
+              </h5>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+                Active candidate resume: <strong>{uploadedFile.fileName || uploadedFile.originalName}</strong>
               </p>
               <Button
                 variant="gradient"
                 size="md"
+                className="mt-4"
                 isLoading={isMatching}
                 onClick={handleRunMatch}
                 leftIcon={Sparkles}
@@ -148,13 +188,13 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
                   </div>
                   <div>
                     <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${scoreConfig.badge}`}>
-                      {jobAtsResult.compatibilityStatus}
+                      {compatibilityStatus}
                     </span>
                     <h5 className="text-sm font-bold text-slate-900 dark:text-white mt-1">
                       Resume to Job Compatibility
                     </h5>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Using: {jobAtsResult.resumeName}
+                      Evaluated against: {uploadedFile?.fileName || uploadedFile?.originalName || 'Candidate Resume'}
                     </p>
                   </div>
                 </div>
@@ -176,17 +216,21 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
                   <h6 className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mb-2.5">
                     <CheckCircle2 className="w-4 h-4" />
-                    Matched Job Keywords ({jobAtsResult.matchedKeywords?.length || 0})
+                    Matched Job Keywords ({matchedKeywords.length})
                   </h6>
                   <div className="flex flex-wrap gap-1.5">
-                    {jobAtsResult.matchedKeywords?.map((kw, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                      >
-                        {kw}
-                      </span>
-                    ))}
+                    {matchedKeywords.length > 0 ? (
+                      matchedKeywords.map((kw, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                        >
+                          {kw}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-slate-400">None detected yet.</span>
+                    )}
                   </div>
                 </div>
 
@@ -194,11 +238,11 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800">
                   <h6 className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5 mb-2.5">
                     <AlertTriangle className="w-4 h-4" />
-                    Missing Required Keywords ({jobAtsResult.missingKeywords?.length || 0})
+                    Missing Required Keywords ({missingKeywords.length})
                   </h6>
                   <div className="flex flex-wrap gap-1.5">
-                    {jobAtsResult.missingKeywords?.length > 0 ? (
-                      jobAtsResult.missingKeywords.map((kw, idx) => (
+                    {missingKeywords.length > 0 ? (
+                      missingKeywords.map((kw, idx) => (
                         <span
                           key={idx}
                           className="px-2.5 py-1 rounded-md text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
@@ -207,7 +251,7 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-slate-400">All primary keywords detected!</span>
+                      <span className="text-xs text-emerald-600 font-medium">All required keywords detected!</span>
                     )}
                   </div>
                 </div>
@@ -220,7 +264,7 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
                   Tailoring Checklist for {job.company}
                 </h6>
                 <ul className="space-y-2">
-                  {jobAtsResult.actionRecommendations?.map((rec, idx) => (
+                  {recommendations.map((rec, idx) => (
                     <li
                       key={idx}
                       className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2"
@@ -235,20 +279,48 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
           )}
 
           {/* Modal Footer */}
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              Close
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                toast.success(`Application drafted for ${job.title}!`);
-                onClose();
-              }}
-            >
-              Apply to {job.company}
-            </Button>
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              {job.linkedinSearchUrl && (
+                <a
+                  href={job.linkedinSearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                >
+                  <span>Search on LinkedIn</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+              {job.naukriSearchUrl && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <a
+                    href={job.naukriSearchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>Search on Naukri</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                Close
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                isLoading={isApplying}
+                onClick={handleApplyClick}
+              >
+                Apply to {job.company}
+              </Button>
+            </div>
           </div>
         </div>
       )}
