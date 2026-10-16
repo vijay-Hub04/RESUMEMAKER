@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -11,6 +12,7 @@ export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, register, isLoading, error, resetError } = useAuth();
+  const { uploadedFile } = useSelector((state) => state.resume);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -48,10 +50,13 @@ export const Login = () => {
     if (!validate()) return;
 
     try {
-      await login({ email: formData.email, password: formData.password }).unwrap();
+      await login({
+        email: formData.email,
+        password: formData.password,
+        resumeId: uploadedFile?.id || uploadedFile?._id || null,
+      }).unwrap();
       toast.success('Welcome back! Signed in successfully.');
-      // navigate(from, { replace: true });
-      navigate("/ats-checker")
+      navigate(from, { replace: true });
     } catch (err) {
       toast.error(err || 'Failed to sign in. Please verify your credentials.');
     }

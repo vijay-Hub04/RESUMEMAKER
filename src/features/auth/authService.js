@@ -6,14 +6,15 @@ const STORAGE_KEY_USER = 'careerai_user';
 
 export const authService = {
   // Real login API call to backend
-  login: async ({ email, password }) => {
+  login: async ({ email, password, resumeId = null }) => {
     try {
       const response = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, {
         email,
         password,
+        resumeId,
       });
 
-      const { user, token } = response.data;
+      const { user, token, resume } = response.data;
 
       if (token) {
         localStorage.setItem(STORAGE_KEY_TOKEN, token);
@@ -22,7 +23,7 @@ export const authService = {
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
       }
 
-      return { user, token };
+      return { user, token, resume };
     } catch (error) {
       const message =
         error.customMessage ||
@@ -34,15 +35,16 @@ export const authService = {
   },
 
   // Real registration API call to backend
-  register: async ({ name, email, password }) => {
+  register: async ({ name, email, password, resumeId = null }) => {
     try {
       const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REGISTER, {
         name,
         email,
         password,
+        resumeId,
       });
 
-      const { user, token } = response.data;
+      const { user, token, resume } = response.data;
 
       if (token) {
         localStorage.setItem(STORAGE_KEY_TOKEN, token);
@@ -51,13 +53,32 @@ export const authService = {
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
       }
 
-      return { user, token };
+      return { user, token, resume };
     } catch (error) {
       const message =
         error.customMessage ||
         error.response?.data?.message ||
         error.message ||
         'Registration failed. Please try again.';
+      throw new Error(message);
+    }
+  },
+
+  // Update candidate profile in MongoDB
+  updateProfile: async (profileData) => {
+    try {
+      const response = await axiosInstance.put(API_ENDPOINTS.AUTH.PROFILE, profileData);
+      const updatedUser = response.data?.user;
+      if (updatedUser) {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(updatedUser));
+      }
+      return updatedUser;
+    } catch (error) {
+      const message =
+        error.customMessage ||
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to update profile.';
       throw new Error(message);
     }
   },

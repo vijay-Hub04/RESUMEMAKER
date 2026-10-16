@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { resumeService } from './resumeService';
-import { loginUser, logoutUser } from '../auth/authSlice';
+import { loginUser, registerUser, logoutUser } from '../auth/authSlice';
 
 // Thunk to fetch active user resume from MongoDB
 export const fetchMyResume = createAsyncThunk(
@@ -142,6 +142,17 @@ const resumeSlice = createSlice({
       })
       // When User Logs In, automatically hydrate existing resume from MongoDB
       .addCase(loginUser.fulfilled, (state, action) => {
+        if (action.payload?.resume) {
+          state.uploadedFile = action.payload.resume;
+          state.uploadStatus = 'succeeded';
+          state.uploadProgress = 100;
+          if (action.payload.resume.atsResult) {
+            state.atsResults = action.payload.resume.atsResult;
+          }
+        }
+      })
+      // When User Registers, automatically hydrate linked guest resume from MongoDB
+      .addCase(registerUser.fulfilled, (state, action) => {
         if (action.payload?.resume) {
           state.uploadedFile = action.payload.resume;
           state.uploadStatus = 'succeeded';

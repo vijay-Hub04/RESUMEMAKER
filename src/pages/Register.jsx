@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -11,6 +12,7 @@ export const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { register, isLoading, error, resetError } = useAuth();
+  const { uploadedFile } = useSelector((state) => state.resume);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -64,6 +66,7 @@ export const Register = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
+        resumeId: uploadedFile?.id || uploadedFile?._id || null,
       }).unwrap();
       toast.success('Account created successfully! Welcome to CareerAI.');
       navigate(from, { replace: true });

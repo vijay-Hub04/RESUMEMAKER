@@ -18,8 +18,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { updateUserProfile } from '../features/auth/authSlice';
-import { removeResume } from '../features/resume/resumeSlice';
+import { updateUserProfile, updateUserProfileAsync } from '../features/auth/authSlice';
+import { removeResume, deleteResumeFile } from '../features/resume/resumeSlice';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import toast from 'react-hot-toast';
@@ -38,11 +38,18 @@ export const Profile = () => {
 
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    dispatch(updateUserProfile(formData));
-    setIsEditing(false);
-    toast.success('Profile updated successfully!');
+    try {
+      await dispatch(updateUserProfileAsync(formData)).unwrap();
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch {
+      // Fallback local update if network issue
+      dispatch(updateUserProfile(formData));
+      setIsEditing(false);
+      toast.success('Profile updated locally!');
+    }
   };
 
   const handleLogout = async () => {
@@ -197,9 +204,19 @@ export const Profile = () => {
                 </Button>
                 <button
                   type="button"
-                  onClick={() => {
-                    dispatch(removeResume());
-                    toast.success('Resume cleared');
+                  onClick={async () => {
+                    if (uploadedFile?.id && !uploadedFile?.id.toString().startsWith('demo-')) {
+                      try {
+                        await dispatch(deleteResumeFile(uploadedFile.id)).unwrap();
+                        toast.success('Resume deleted successfully from MongoDB');
+                      } catch {
+                        dispatch(removeResume());
+                        toast.success('Resume removed');
+                      }
+                    } else {
+                      dispatch(removeResume());
+                      toast.success('Resume removed');
+                    }
                   }}
                   className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
                 >

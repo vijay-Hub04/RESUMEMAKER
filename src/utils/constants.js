@@ -220,54 +220,54 @@ export const MOCK_JOBS = [
 ];
 
 export const DEFAULT_MOCK_ATS_RESULT = {
-  score: 78,
-  status: 'Good Compatibility',
-  summary: 'Your resume demonstrates solid technical experience and good structure. By addressing keyword density, adding measurable business metrics, and tweaking section hierarchy, you can easily push your score past 90.',
-  formatting: {
-    score: 88,
-    status: 'Optimal',
-    items: [
-      { name: 'Standard Section Headings', passed: true, note: 'Clear sections: Experience, Skills, Education found.' },
-      { name: 'Machine-Readable Font Selection', passed: true, note: 'Standard clean font detected without corrupt glyphs.' },
-      { name: 'Single-Column Clean Layout', passed: true, note: 'Linear ATS-friendly layout parses chronologically.' },
-      { name: 'Tables and Nested Columns', passed: false, note: 'Found 1 secondary column that might confuse older ATS parsers.' },
-      { name: 'Contact Info Placement', passed: true, note: 'Email, phone, and LinkedIn properly placed in header.' },
-    ]
-  },
-  skillsAnalysis: {
-    matchedPercentage: 74,
-    topFoundSkills: [
-      'React.js', 'JavaScript (ES6+)', 'HTML5 & CSS3', 'Tailwind CSS', 'Redux Toolkit',
-      'REST APIs', 'Git & GitHub', 'Agile / Scrum', 'Responsive Web Design'
-    ],
-    missingKeywords: [
-      'TypeScript', 'Unit Testing (Jest/Vitest)', 'CI/CD Pipelines', 'Docker',
-      'Performance Optimization', 'Web Vitals', 'GraphQL'
-    ]
-  },
-  strengths: [
-    'Clear chronological progression with specific job titles and dates.',
-    'Strong focus on modern frontend frameworks (React, Redux, Tailwind).',
-    'Proper inclusion of clickable LinkedIn and GitHub portfolio links.',
-    'Concise bullet points with strong active phrasing.'
-  ],
-  weaknesses: [
-    'Few quantified business metrics (e.g., "improved load time by 35%").',
-    'Missing cloud and containerization keywords sought by mid-to-senior recruiters.',
-    'Summary statement is somewhat generic and could highlight your core niche better.'
-  ],
-  recommendations: [
-    {
-      category: 'Impact Metrics',
-      tip: 'Incorporate quantifiable outcomes in at least 3 bullet points (e.g., "Increased user engagement by 28%", "Reduced bundle size by 40%").'
-    },
-    {
-      category: 'Keyword Enrichment',
-      tip: 'Add TypeScript and testing libraries (Jest, Vitest, React Testing Library) into your Technical Skills section.'
-    },
-    {
-      category: 'Summary Optimization',
-      tip: 'Refine your professional summary to immediately highlight your years of experience, core tech stack, and primary value proposition.'
-    }
-  ]
+  // score: 1,
+  // status: 'Good Compatibility',
+  // summary: 'Your resume demonstrates solid technical experience and good structure. By addressing keyword density, adding measurable business metrics, and tweaking section hierarchy, you can easily push your score past 90.',
+  // formatting: {
+  //   score: 48,
+  //   status: 'Optimal',
+  //   items: [
+  //     { name: 'Standard Section Headings', passed: true, note: 'Clear sections: Experience, Skills, Education found.' },
+  //     { name: 'Machine-Readable Font Selection', passed: true, note: 'Standard clean font detected without corrupt glyphs.' },
+  //     { name: 'Single-Column Clean Layout', passed: true, note: 'Linear ATS-friendly layout parses chronologically.' },
+  //     { name: 'Tables and Nested Columns', passed: false, note: 'Found 1 secondary column that might confuse older ATS parsers.' },
+  //     { name: 'Contact Info Placement', passed: true, note: 'Email, phone, and LinkedIn properly placed in header.' },
+  //   ]
+  // },
+  // skillsAnalysis: {
+  //   matchedPercentage: 74,
+  //   topFoundSkills: [
+  //     'React.js', 'JavaScript (ES6+)', 'HTML5 & CSS3', 'Tailwind CSS', 'Redux Toolkit',
+  //     'REST APIs', 'Git & GitHub', 'Agile / Scrum', 'Responsive Web Design'
+  //   ],
+  //   missingKeywords: [
+  //     'TypeScript', 'Unit Testing (Jest/Vitest)', 'CI/CD Pipelines', 'Docker',
+  //     'Performance Optimization', 'Web Vitals', 'GraphQL'
+  //   ]
+  // },
+  // strengths: [
+  //   'Clear chronological progression with specific job titles and dates.',
+  //   'Strong focus on modern frontend frameworks (React, Redux, Tailwind).',
+  //   'Proper inclusion of clickable LinkedIn and GitHub portfolio links.',
+  //   'Concise bullet points with strong active phrasing.'
+  // ],
+  // weaknesses: [
+  //   'Few quantified business metrics (e.g., "improved load time by 35%").',
+  //   'Missing cloud and containerization keywords sought by mid-to-senior recruiters.',
+  //   'Summary statement is somewhat generic and could highlight your core niche better.'
+  // ],
+  // recommendations: [
+  //   {
+  //     category: 'Impact Metrics',
+  //     tip: 'Incorporate quantifiable outcomes in at least 3 bullet points (e.g., "Increased user engagement by 28%", "Reduced bundle size by 40%").'
+  //   },
+  //   {
+  //     category: 'Keyword Enrichment',
+  //     tip: 'Add TypeScript and testing libraries (Jest, Vitest, React Testing Library) into your Technical Skills section.'
+  //   },
+  //   {
+  //     category: 'Summary Optimization',
+  //     tip: 'Refine your professional summary to immediately highlight your years of experience, core tech stack, and primary value proposition.'
+  //   }
+  // ]
 };

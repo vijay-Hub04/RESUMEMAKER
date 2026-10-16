@@ -39,6 +39,18 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+export const updateUserProfileAsync = createAsyncThunk(
+  'auth/updateUserProfileAsync',
+  async (profileData, { rejectWithValue }) => {
+    try {
+      const data = await authService.updateProfile(profileData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to update profile');
+    }
+  }
+);
+
 const initialState = {
   user: initialAuth.user,
   token: initialAuth.token,
@@ -102,6 +114,10 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.isLoading = false;
         state.error = null;
+      })
+      // Update Profile
+      .addCase(updateUserProfileAsync.fulfilled, (state, action) => {
+        state.user = { ...state.user, ...action.payload };
       });
   },
 });
