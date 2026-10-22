@@ -108,7 +108,8 @@ export const JobSearch = () => {
               {/* Job Title / Keywords */}
               <div className="md:col-span-1">
                 <Input
-                  placeholder="Job title or keywords (e.g. React)..."
+                  label="Job Title or Skills"
+                  placeholder="e.g. React, Full Stack, Python, AWS..."
                   leftIcon={Search}
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -118,7 +119,8 @@ export const JobSearch = () => {
               {/* Company Search */}
               <div>
                 <Input
-                  placeholder="Company name (e.g. NovaTech)..."
+                  label="Company Name"
+                  placeholder="e.g. Datadog, Stripe, Google..."
                   leftIcon={Building2}
                   value={filters.company}
                   onChange={(e) => handleFilterChange('company', e.target.value)}
@@ -128,12 +130,34 @@ export const JobSearch = () => {
               {/* Location */}
               <div>
                 <Input
-                  placeholder="Location (e.g. San Francisco or Remote)..."
+                  label="City or Location"
+                  placeholder="e.g. Remote, Worldwide, Germany..."
                   leftIcon={MapPin}
                   value={filters.location}
                   onChange={(e) => handleFilterChange('location', e.target.value)}
                 />
               </div>
+            </div>
+
+            {/* Quick Keyword Suggestions */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+              <span className="text-slate-400 font-medium">Quick search:</span>
+              {['React', 'Node.js', 'Python', 'Full Stack', 'Remote'].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => {
+                    if (tag === 'Remote') {
+                      handleFilterChange('location', 'Remote');
+                    } else {
+                      handleFilterChange('search', tag);
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-400 text-slate-600 dark:text-slate-300 transition-colors font-medium text-[11px]"
+                >
+                  +{tag}
+                </button>
+              ))}
             </div>
 
             {/* Dropdown Filters & Actions */}
@@ -199,17 +223,98 @@ export const JobSearch = () => {
         {isLoading ? (
           <Loader text="Finding matching jobs..." />
         ) : jobs.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-[#151F32] rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
-            <Briefcase className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-            <h4 className="text-lg font-bold text-slate-900 dark:text-white">
-              No jobs found matching your criteria
+          <div className="text-center py-14 bg-white dark:bg-[#151F32] rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-4">
+              <Briefcase className="w-7 h-7" />
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold mb-3">
+              <span>100% Real Live Job Feed • No Mock Jobs</span>
+            </div>
+            <h4 className="text-xl font-bold font-heading text-slate-900 dark:text-white">
+              No live jobs found matching your criteria
             </h4>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-              Try adjusting your keyword search, removing location restrictions, or clearing filters.
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-lg mx-auto leading-relaxed">
+              We strictly return verified, open positions directly from real company feeds. No fake, static, or synthetic companies are generated.
             </p>
-            <div className="mt-5">
+
+            {/* Display active filter tags if any */}
+            {(filters.search || filters.company || (filters.location && filters.location !== 'All')) && (
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                {filters.search && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    Keyword: <strong>"{filters.search}"</strong>
+                  </span>
+                )}
+                {filters.company && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    Company: <strong>"{filters.company}"</strong>
+                  </span>
+                )}
+                {filters.location && filters.location !== 'All' && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                    Location: <strong>"{filters.location}"</strong>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Smart Helper: if user entered a city/location string in the Company field */}
+            {filters.company && !filters.location && (
+              <div className="mt-4 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/80 max-w-md mx-auto text-xs text-amber-800 dark:text-amber-300">
+                <span>Looking for jobs in city/location <strong>"{filters.company}"</strong>? </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const compVal = filters.company;
+                    handleFilterChange('location', compVal);
+                    handleFilterChange('company', '');
+                  }}
+                  className="underline font-bold ml-1 hover:text-amber-900 dark:hover:text-amber-200 cursor-pointer"
+                >
+                  Search as Location instead
+                </button>
+              </div>
+            )}
+
+            {/* External Direct Live Portal Fallbacks */}
+            <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 max-w-lg mx-auto">
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-3">
+                Search live postings on external career portals for these exact criteria:
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href={`https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(filters.search || filters.company || 'Software Engineer')}&location=${encodeURIComponent(filters.location || filters.company || 'India')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition-colors"
+                >
+                  <span>LinkedIn Jobs</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-indigo-500" />
+                </a>
+                <a
+                  href={`https://www.naukri.com/${encodeURIComponent(filters.search || filters.company || 'software')}-jobs-in-${encodeURIComponent(filters.location || filters.company || 'india')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition-colors"
+                >
+                  <span>Naukri</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-cyan-500" />
+                </a>
+                <a
+                  href={`https://www.google.com/search?q=${encodeURIComponent(`${filters.search || ''} ${filters.company || ''} jobs in ${filters.location || filters.company || 'India'}`)}&ibp=htl;jobs`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition-colors"
+                >
+                  <span>Google Jobs</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-emerald-500" />
+                </a>
+              </div>
+            </div>
+
+            <div className="mt-6">
               <Button variant="secondary" size="sm" onClick={handleClearFilters}>
-                Reset All Filters
+                Clear All Filters & Show Live Jobs
               </Button>
             </div>
           </div>
@@ -227,6 +332,10 @@ export const JobSearch = () => {
                   <img
                     src={job.logo || job.companyLogo}
                     alt={job.company}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company || 'TC')}&background=6366f1&color=fff&bold=true`;
+                    }}
                     className="w-14 h-14 rounded-2xl object-cover border border-slate-200 dark:border-slate-700/80 shadow-sm shrink-0"
                   />
                   <div className="space-y-2 flex-1">

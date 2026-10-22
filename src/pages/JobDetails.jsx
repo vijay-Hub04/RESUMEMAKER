@@ -96,6 +96,10 @@ export const JobDetails = () => {
               <img
                 src={selectedJob.logo || selectedJob.companyLogo}
                 alt={selectedJob.company}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedJob.company || 'TC')}&background=6366f1&color=fff&bold=true`;
+                }}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-md shrink-0"
               />
               <div className="space-y-1">

@@ -84,8 +84,12 @@ export const Register = () => {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white mx-auto shadow-lg shadow-indigo-500/20 mb-3">
-            <Sparkles className="w-6 h-6" />
+          <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-xl shadow-indigo-500/25 ring-1 ring-indigo-500/30 mx-auto mb-3 bg-slate-900">
+            <img
+              src="/assets/careerai_logo.jpg"
+              alt="CareerAI Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white">
             Create Your Account

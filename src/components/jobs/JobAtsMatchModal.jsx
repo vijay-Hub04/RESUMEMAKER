@@ -108,6 +108,10 @@ export const JobAtsMatchModal = ({ isOpen, onClose, job }) => {
             <img
               src={job.logo || job.companyLogo}
               alt={job.company}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company || 'TC')}&background=6366f1&color=fff&bold=true`;
+              }}
               className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
             />
             <div className="flex-1 min-w-0">

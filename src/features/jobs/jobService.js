@@ -1,11 +1,10 @@
 import axiosInstance from '../../services/axiosInstance';
 import { API_ENDPOINTS } from '../../services/apiEndpoints';
-import { MOCK_JOBS } from '../../utils/constants';
 
 export const jobService = {
   /**
-   * Fetch live jobs from backend, ranked by candidate's resume match
-   * @param {Object} filters - Search, location, type, experience
+   * Fetch 100% real live jobs from backend, ranked by candidate's resume match
+   * @param {Object} filters - Search, company, location, type, experience
    * @param {string} resumeId - Optional resume ID for guest ranking
    */
   getJobs: async (filters = {}, resumeId = null) => {
@@ -16,14 +15,13 @@ export const jobService = {
       const response = await axiosInstance.get(API_ENDPOINTS.JOBS.GET_ALL, { params });
       return response.data?.data || [];
     } catch (err) {
-      console.warn('[jobService] Falling back to local catalog:', err.message);
-      // Fallback in case of server disconnect
-      return MOCK_JOBS;
+      console.warn('[jobService] Live job retrieval error:', err.message);
+      return [];
     }
   },
 
   /**
-   * Fetch single job details with tailored match breakdown
+   * Fetch single real live job details with tailored match breakdown
    */
   getJobById: async (id, resumeId = null) => {
     try {
@@ -33,10 +31,8 @@ export const jobService = {
       const response = await axiosInstance.get(API_ENDPOINTS.JOBS.GET_BY_ID(id), { params });
       return response.data?.data;
     } catch (err) {
-      console.warn('[jobService] Falling back for job ID:', id);
-      const fallback = MOCK_JOBS.find((j) => j.id === id);
-      if (!fallback) throw new Error('Job listing not found');
-      return fallback;
+      console.warn('[jobService] Error fetching live job by ID:', id);
+      throw err;
     }
   },
 

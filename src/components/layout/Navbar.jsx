@@ -61,8 +61,12 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-200">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-indigo-500/25 ring-1 ring-indigo-500/30 group-hover:scale-105 transition-transform duration-200 bg-slate-900">
+              <img
+                src="/assets/careerai_logo.jpg"
+                alt="CareerAI Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold font-heading tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
