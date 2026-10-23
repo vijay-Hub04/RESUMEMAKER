@@ -41,14 +41,26 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem('careerai_token');
         localStorage.removeItem('careerai_user');
       }
-      message = error.response.data?.message || `Error ${error.response.status}: Request failed`;
+      const rawMessage = error.response.data?.message || `Error ${error.response.status}: Request failed`;
+      
+      // Filter out internal database jargon/syntax
+      if (
+        rawMessage.includes('buffering timed out') ||
+        rawMessage.includes('findOne') ||
+        rawMessage.includes('MongoServerSelectionError') ||
+        rawMessage.includes('MongooseError')
+      ) {
+        message = 'Database service is temporarily unavailable. Please try again shortly.';
+      } else {
+        message = rawMessage;
+      }
     } else if (error.request) {
       // Request made but no response (network down / backend offline)
-      message = 'Network error or backend is not reachable. Using offline demo data.';
+      message = 'Network error: Backend server is not reachable. Please ensure the server is running.';
     }
 
     console.warn('[Axios Interceptor Notice]:', message);
-    return Promise.reject({ ...error, customMessage: message });
+    return Promise.reject({ ...error, customMessage: message, message });
   }
 );
 

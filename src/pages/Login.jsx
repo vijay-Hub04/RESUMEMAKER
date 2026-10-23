@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
@@ -13,6 +13,12 @@ export const Login = () => {
   const location = useLocation();
   const { login, register, isLoading, error, resetError } = useAuth();
   const { uploadedFile } = useSelector((state) => state.resume);
+
+  // Clear previous auth errors (e.g. from register page) on mount and unmount
+  useEffect(() => {
+    resetError();
+    return () => resetError();
+  }, []);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -44,7 +50,6 @@ export const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    
     e.preventDefault();
     resetError();
     if (!validate()) return;
@@ -58,7 +63,11 @@ export const Login = () => {
       toast.success('Welcome back! Signed in successfully.');
       navigate(from, { replace: true });
     } catch (err) {
-      toast.error(err || 'Failed to sign in. Please verify your credentials.');
+      const displayMsg =
+        typeof err === 'string' && !err.includes('users.findOne') && !err.includes('buffering timed out')
+          ? err
+          : 'Invalid email or password. Please verify your credentials.';
+      toast.error(displayMsg);
     }
   };
 
@@ -82,9 +91,14 @@ export const Login = () => {
       toast.success('Logged in with Demo Candidate profile!');
       navigate(from, { replace: true });
     } catch (err) {
-      toast.error(typeof err === 'string' ? err : 'Demo login failed');
+      const displayMsg =
+        typeof err === 'string' && !err.includes('users.findOne') && !err.includes('buffering timed out')
+          ? err
+          : 'Demo login failed. Please try again.';
+      toast.error(displayMsg);
     }
   };
+
 
   return (
     <div className="py-12 sm:py-20 flex items-center justify-center px-4">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
@@ -13,6 +13,12 @@ export const Register = () => {
   const location = useLocation();
   const { register, isLoading, error, resetError } = useAuth();
   const { uploadedFile } = useSelector((state) => state.resume);
+
+  // Clear previous auth errors (e.g. from login page) on mount and unmount
+  useEffect(() => {
+    resetError();
+    return () => resetError();
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -71,9 +77,14 @@ export const Register = () => {
       toast.success('Account created successfully! Welcome to CareerAI.');
       navigate(from, { replace: true });
     } catch (err) {
-      toast.error(err || 'Registration failed. Please try again.');
+      const displayMsg =
+        typeof err === 'string' && !err.includes('users.findOne') && !err.includes('buffering timed out')
+          ? err
+          : 'Registration failed. Please check your details and try again.';
+      toast.error(displayMsg);
     }
   };
+
 
   return (
     <div className="py-12 sm:py-20 flex items-center justify-center px-4">
