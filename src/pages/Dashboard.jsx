@@ -300,10 +300,7 @@ export const Dashboard = () => {
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
                     No Login Needed for Scan
                   </span>
-                  <span className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    MongoDB Private Storage
-                  </span>
+                 
                 </motion.div>
               </div>
 

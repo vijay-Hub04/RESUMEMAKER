@@ -226,7 +226,7 @@ export const ResumeUploader = ({ onAnalysisComplete }) => {
               Drag & Drop your resume here
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md">
-              Supports <strong className="text-slate-700 dark:text-slate-200">PDF, DOC, DOCX</strong> up to 10MB. Stored securely in MongoDB.
+              Supports <strong className="text-slate-700 dark:text-slate-200">PDF, DOC, DOCX</strong> up to 10MB. Stored securely.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
