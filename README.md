@@ -2,7 +2,7 @@
 
 A modern, responsive SaaS frontend application for analyzing resume ATS compatibility, tracking user growth metrics, and providing smart career workflows.
 
-## 🚀 Included Pages
+## Included Pages
 
 * **Dashboard (`/`)**
   * Hero section with platform value propositions
@@ -14,7 +14,7 @@ A modern, responsive SaaS frontend application for analyzing resume ATS compatib
 * **Register (`/register`)**
   * Full name, email, password, password confirmation, and terms agreement validation
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 * **Core:** React 19, Vite, JavaScript
 * **Routing:** React Router v7
@@ -25,7 +25,7 @@ A modern, responsive SaaS frontend application for analyzing resume ATS compatib
 * **Notifications:** React Hot Toast
 * **HTTP:** Axios instance with interceptors
 
-## 📦 Installation & Setup
+##  Installation & Setup
 
 1. **Clone the repository:**
    ```bash
@@ -48,7 +48,7 @@ A modern, responsive SaaS frontend application for analyzing resume ATS compatib
    npm run build
    ```
 
-## 🎨 Features & Highlights
+##  Features & Highlights
 
 * **Light/Dark Mode:** Seamless theme switching with animated Sun/Moon toggle and `localStorage` persistence.
 * **Responsive Design:** Mobile-first layout with smooth collapsible drawer navigation.
